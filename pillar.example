@@ -1,0 +1,6 @@
+nginx-shibboleth:
+  lookup:
+    pkg: mynginx-shibboleth
+    conf_file: /usr/local/etc/nginx-shibboleth/nginx-shibboleth.conf
+  config:
+    key: othervalue

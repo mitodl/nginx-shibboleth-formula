@@ -1,0 +1,9 @@
+name: nginx-shibboleth
+os: RedHat, CentOS, Ubuntu, Debian
+os_family: RedHat, Debian
+version: 201704
+release: 1
+summary: Formula to install and configure the Shibboleth Service Provider with Nginx integration
+description: Formula to install and configure the Shibboleth Service Provider with Nginx integration
+top_level_dir: nginx-shibboleth
+recommended: 
