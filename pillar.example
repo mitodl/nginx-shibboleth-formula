@@ -1,6 +1,152 @@
+# -*- mode: yaml -*-
 nginx-shibboleth:
-  lookup:
-    pkg: mynginx-shibboleth
-    conf_file: /usr/local/etc/nginx-shibboleth/nginx-shibboleth.conf
+  overrides:
+    conf_file: /etc/shibboleth/shibboleth2.xml
+  secrets:
+    key: |
+      boguskeydata
+    cert: |
+      boguscertdata
   config:
-    key: othervalue
+    shibboleth2:
+      SPConfig:
+        xmlns: 'urn:mace:shibboleth:2.0:native:sp:config'
+        'xmlns:conf': 'urn:mace:shibboleth:2.0:native:sp:config'
+        'xmlns:saml': 'urn:oasis:names:tc:SAML:2.0:assertion'
+        'xmlns:samlp': 'urn:oasis:names:tc:SAML:2.0:protocol'
+        'xmlns:md': 'urn:oasis:names:tc:SAML:2.0:metadata'
+        clockSkew: 180
+        RequestMapper:
+          type: Native
+          RequestMap:
+            Host:
+              name: host.example.com
+              authType: shibboleth
+              requireSession: 'true'
+              Path:
+                name: login
+        ApplicationDefaults:
+          entityID: https://host.example.com/shibboleth
+          REMOTE_USER: "eppn persistent-id targeted-id"
+          Sessions:
+            lifetime: 28800
+            timeout: 3600
+            relayState: 'ss:mem'
+            checkAddress: 'false'
+            handlerSSL: 'true'
+            cookieProps: https
+            SSO:
+              discoveryProtocol: SAMLDS
+              discoveryURL: "https://ds.example.org/DS/WAYF"
+              text: SAML2 SAML1
+            Logout:
+              - SAML2 Local
+            Handler:
+              - type: MetadataGenerator
+                Location: /Metadata
+                signing: 'false'
+              - type: Status
+                Location: /Status
+                acl: "127.0.0.1 ::1"
+              - type: Session
+                Location: /Session
+                showAttributeValues: 'false'
+              - type: DiscoveryFeed
+                Location: /DiscoFeed
+          Errors:
+            supportContact: root@localhost
+            helpLocation: /about.html
+            styleSheet: /shibboleth-sp/main.css
+          MetadataProvider:
+            type: XML
+            uri: 'http://web.mit.edu/touchstone/shibboleth/config/metadata/MIT-metadata.xml'
+            backingFilePath: MIT-metadata.xml
+            reloadInterval: 7200
+            MetadataFilter:
+              type: EntityRoleWhitelist
+              RetainedRole:
+                - 'md:IDPSSODescriptor'
+                - 'md:AttributeAuthorityDescriptor'
+          AttributeExtractor:
+            type: XML
+            validate: "true"
+            reloadChanges: "false"
+            path: attribute-map.xml
+          AttributeResolver:
+            type: Query
+            subjectMatch: "true"
+          AttributeFilter:
+            type: XML
+            validate: "true"
+            path: attribute-policy.xml
+          CredentialResolver:
+            type: File
+            key: sp-key.pem
+            certificate: sp-cert.pem
+        SecurityPolicyProvider:
+          type: XML
+          validate: "true"
+          path: security-policy.xml
+        ProtocolProvider:
+          type: XML
+          validate: "true"
+          reloadChanges: "false"
+          path: protocols.xml
+
+
+nginx:
+  ng:
+    install_from_source: True
+    source_version: 1.13.4
+    source_hash: de21f3c49ba65c611329d8759a63d72e5fcf719bc6f2a3270e2541348ef1fbba
+    servers:
+      managed:
+        shibtest:
+          enabled: True
+          config:
+            - server:
+                - server_name: host.exammple.com
+                - listen:
+                    - 80
+                - location /shibauthorizer:
+                    - internal: ''
+                    - include: includes/shib_fastcgi_params
+                    - fastcgi_pass: 'unix:/run/uwsgi/shibauthorizer.sock'
+                - location /Shibboleth.sso:
+                    - include: includes/shib_fastcgi_params
+                    - fastcgi_pass: 'unix:/run/uwsgi/shibresponder.sock'
+                - location /login:
+                    - include: includes/shib_clear_headers
+                    - shib_request: /shibauthorizer
+                    - shib_request_use_headers: 'on'
+
+uwsgi:
+  build_env:
+    UWSGI_PROFILE: cgi
+  emperor_config:
+    uwsgi:
+      vassals-set:
+        - 'thunder-lock=true'
+  apps:
+    shibauthorizer:
+      uwsgi:
+        plugins: cgi
+        fastcgi-socket: /run/uwsgi/shibauthorizer.sock
+        fastcgi-modifier1: 9
+        uid: _shibd
+        chown-socket: _shibd:www-data
+        chmod-socket: 0660
+        threads: 20
+        cgi: /usr/lib/x86_64-linux-gnu/shibboleth/shibauthorizer
+        logto: /var/log/uwsgi/apps/%n.log
+    shibresponder:
+      uwsgi:
+        plugins: cgi
+        fastcgi-socket: /run/uwsgi/shibresponder.sock
+        fastcgi-modifier1: 9
+        uid: _shibd
+        chown-socket: _shibd:www-data
+        chmod-socket: 0660
+        threads: 20
+        cgi: /usr/lib/x86_64-linux-gnu/shibboleth/shibresponder
+        logto: /var/log/uwsgi/apps/%n.log

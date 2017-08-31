@@ -1,14 +1,17 @@
 {% set nginx_shibboleth = salt.grains.filter_by({
     'default': {
-        'pkg': 'nginx-shibboleth',
-        'service': 'nginx-shibboleth',
-        'conf_file': '/etc/nginx-shibboleth/nginx-shibboleth.conf',
-        'config': {
-            'key': 'value',
-        },
+        'service': 'shibd',
+        'conf_file': '/etc/shibboleth/shibboleth2.xml',
+        'override_sp_cert': False
     },
     'Debian': {
+        'pkgs': [
+            'shibboleth-sp2-utils'
+        ]
     },
     'RedHat': {
+        'pkgs': [
+            'shibboleth'
+        ]
     },
-}, grain='os_family', merge=salt.pillar.get('nginx-shibboleth:overrides), base='default') %}
+}, grain='os_family', merge=salt.pillar.get('nginx-shibboleth:overrides'), base='default') %}

@@ -24,7 +24,10 @@ TODO - add description of this state
 ``nginx-shibboleth.conf``
 -------------------------
 
-TODO - add description of this state
+This state will place the contents of the shibboleth key and certificate from
+pillar data. It will also render the shibboleth service provider configuration
+from a pillar dictionary. The contents of the configuration requires a `RequestMapper_`
+block with a Host:name attribute that matches the server_name configured in Nginx.
 
 
 Template
@@ -33,3 +36,5 @@ Template
 This formula was created from a cookiecutter template.
 
 See https://github.com/mitodl/saltstack-formula-cookiecutter.
+
+.. _RequestMapper: https://wiki.shibboleth.net/confluence/display/SHIB2/NativeSPRequestMapper

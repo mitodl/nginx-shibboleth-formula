@@ -1,6 +1,5 @@
 base:
   '*':
     - nginx-shibboleth
-    
     - nginx-shibboleth.tests
-    
+    - uwsgi
