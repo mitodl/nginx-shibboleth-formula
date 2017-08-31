@@ -5,7 +5,12 @@ include:
   - .install
   - .service
 
-{% if nginx_shibboleth.override_sp_cert %}
+{% if nginx_shibboleth.generate_sp_cert %}
+generate_shibboleth_sp_cert_and_key:
+  cmd.run:
+    - name: shib-keygen
+    - creates: /etc/shibboleth/sp-cert.pem
+{% else %}
 {% for secret in ['key', 'cert'] %}
 place_shibboleth_sp_{{ secret }}:
   file.managed:
