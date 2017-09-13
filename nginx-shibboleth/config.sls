@@ -16,6 +16,8 @@ place_shibboleth_sp_{{ secret }}:
   file.managed:
     - name: /etc/shibboleth/sp-{{ secret }}.pem
     - mode: 0644
+    - user: _shibd
+    - group: _shibd
     - contents_pillar: nginx-shibboleth:secrets:{{ secret }}
     - onchanges_in:
         - service: nginx_shibboleth_service_running
@@ -31,3 +33,13 @@ generate_{{ config_name }}_configuration_file:
     - onchanges_in:
         - service: nginx_shibboleth_service_running
 {% endfor %}
+
+place_supervisor_fcgi_configuration:
+  file.managed:
+    - name: /etc/supervisor/conf.d/shibboleth_sp_fcgi.conf
+    - source: salt://nginx-shibboleth/files/shibboleth_sp_fcgi.conf
+
+ensure_shibauthorizer_fcgi_running:
+  supervisord.running:
+    - name: 'fcgi-program:shibauthorizer'
+    - update: True

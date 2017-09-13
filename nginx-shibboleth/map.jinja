@@ -6,12 +6,14 @@
     },
     'Debian': {
         'pkgs': [
-            'shibboleth-sp2-utils'
+            'shibboleth-sp2-utils',
+            'supervisor'
         ]
     },
     'RedHat': {
         'pkgs': [
-            'shibboleth'
+            'shibboleth',
+            'supervisor'
         ]
     },
 }, grain='os_family', merge=salt.pillar.get('nginx-shibboleth:overrides'), base='default') %}

@@ -1,12 +1,21 @@
 # -*- mode: yaml -*-
+{% set server_domain_name = 'sso.example.com' %}
+letsencrypt:
+  config: |
+    server = https://acme-v01.api.letsencrypt.org/directory
+    email = ops@example.com
+    authenticator = webroot
+    webroot-path = /var/www
+    agree-tos = True
+    renew-by-default = True
+  domainsets:
+    www:
+      - {{ server_domain_name }}
+
 nginx-shibboleth:
   overrides:
     conf_file: /etc/shibboleth/shibboleth2.xml
-  secrets:
-    key: |
-      boguskeydata
-    cert: |
-      boguscertdata
+    generate_sp_cert: True
   config:
     shibboleth2:
       SPConfig:
@@ -20,13 +29,13 @@ nginx-shibboleth:
           type: Native
           RequestMap:
             Host:
-              name: host.example.com
+              name:{{ server_domain_name }}
               authType: shibboleth
               requireSession: 'true'
               Path:
-                name: login
+                name: secure
         ApplicationDefaults:
-          entityID: https://host.example.com/shibboleth
+          entityID: https://{{ server_domain_name }}/shibboleth
           REMOTE_USER: "eppn persistent-id targeted-id"
           Sessions:
             lifetime: 28800
@@ -93,7 +102,6 @@ nginx-shibboleth:
           reloadChanges: "false"
           path: protocols.xml
 
-
 nginx:
   ng:
     install_from_source: True
@@ -105,48 +113,53 @@ nginx:
           enabled: True
           config:
             - server:
-                - server_name: host.exammple.com
+                - server_name: {{ server_domain_name }}
                 - listen:
                     - 80
+                - listen:
+                    - '[::]:80'
+                - location /.well-known/:
+                    - alias: /var/www/.well-known/
+            {% if salt.file.directory_exists('/etc/letsencrypt/live/{}'.format(server_domain_name)) %}
+                - location /:
+                    - return: 301 https://$host$request_uri
+            - server:
+                - server_name: {{ server_domain_name }}
+                - listen:
+                    - 443
+                    - ssl
+                - listen:
+                    - '[::]:443'
+                    - ssl
+                - ssl_certificate: /etc/letsencrypt/live/{{ server_domain_name }}/fullchain.pem
+                - ssl_certificate_key: /etc/letsencrypt/live/{{ server_domain_name }}/privkey.pem
+                - ssl_trusted_certificate: /etc/letsencrypt/live/{{ server_domain_name }}/chain.pem
+                - ssl_stapling: 'on'
+                - ssl_stapling_verify: 'on'
+                - ssl_session_timeout: 1d
+                - ssl_session_tickets: 'off'
+                - ssl_protocols:
+                    - TLSv1.2
+                - ssl_ciphers: "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256\
+                     :ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384\
+                     :DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256\
+                     :ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384\
+                     :ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256\
+                     :DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256\
+                     :AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!DSS"
+                - ssl_prefer_server_ciphers: 'on'
+                - resolver: 8.8.8.8
+            {% endif %}
                 - location /shibauthorizer:
                     - internal: ''
+                    - include: fastcgi_params
                     - include: includes/shib_fastcgi_params
-                    - fastcgi_pass: 'unix:/run/uwsgi/shibauthorizer.sock'
+                    - fastcgi_pass: 'unix:/run/shibauthorizer.sock'
                 - location /Shibboleth.sso:
+                    - include: fastcgi_params
                     - include: includes/shib_fastcgi_params
-                    - fastcgi_pass: 'unix:/run/uwsgi/shibresponder.sock'
+                    - fastcgi_pass: 'unix:/run/shibresponder.sock'
                 - location /login:
                     - include: includes/shib_clear_headers
                     - shib_request: /shibauthorizer
                     - shib_request_use_headers: 'on'
-
-uwsgi:
-  build_env:
-    UWSGI_PROFILE: cgi
-  emperor_config:
-    uwsgi:
-      vassals-set:
-        - 'thunder-lock=true'
-  apps:
-    shibauthorizer:
-      uwsgi:
-        plugins: cgi
-        fastcgi-socket: /run/uwsgi/shibauthorizer.sock
-        fastcgi-modifier1: 9
-        uid: _shibd
-        chown-socket: _shibd:www-data
-        chmod-socket: 0660
-        threads: 20
-        cgi: /usr/lib/x86_64-linux-gnu/shibboleth/shibauthorizer
-        logto: /var/log/uwsgi/apps/%n.log
-    shibresponder:
-      uwsgi:
-        plugins: cgi
-        fastcgi-socket: /run/uwsgi/shibresponder.sock
-        fastcgi-modifier1: 9
-        uid: _shibd
-        chown-socket: _shibd:www-data
-        chmod-socket: 0660
-        threads: 20
-        cgi: /usr/lib/x86_64-linux-gnu/shibboleth/shibresponder
-        logto: /var/log/uwsgi/apps/%n.log

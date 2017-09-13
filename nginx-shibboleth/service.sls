@@ -5,3 +5,8 @@ nginx_shibboleth_service_running:
     - name: {{ nginx_shibboleth.service }}
     - enable: True
     - restart: True
+
+supervisor_service_running:
+  service.running:
+    - name: supervisor
+    - enable: True
