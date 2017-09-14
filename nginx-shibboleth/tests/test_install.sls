@@ -7,14 +7,10 @@ test_{{pkg}}_is_installed:
     - is_installed: True
 {% endfor %}
 
-test_shibd_is_running:
+{% for service in ['shibd', 'nginx', 'supervisor'] %}
+test_{{ service }}_is_running:
   testinfra.service:
-    - name: shibd
+    - name: {{ service }}
     - is_running: True
     - is_enabled: True
-
-test_nginx_is_running:
-  testinfra.service:
-    - name: nginx
-    - is_running: True
-    - is_enabled: True
+{% endfor %}

@@ -39,7 +39,11 @@ place_supervisor_fcgi_configuration:
     - name: /etc/supervisor/conf.d/shibboleth_sp_fcgi.conf
     - source: salt://nginx-shibboleth/files/shibboleth_sp_fcgi.conf
 
-ensure_shibauthorizer_fcgi_running:
+{% for program in ['shibauthorizer', 'shibresponder'] %}
+ensure_{{ program }}_fcgi_running:
   supervisord.running:
-    - name: 'fcgi-program:shibauthorizer'
+    - name: {{ program }}
     - update: True
+    - require:
+        - file: place_supervisor_fcgi_configuration
+{% endfor %}

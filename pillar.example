@@ -29,7 +29,7 @@ nginx-shibboleth:
           type: Native
           RequestMap:
             Host:
-              name:{{ server_domain_name }}
+              name: {{ server_domain_name }}
               authType: shibboleth
               requireSession: 'true'
               Path:
