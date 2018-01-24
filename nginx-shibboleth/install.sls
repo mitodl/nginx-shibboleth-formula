@@ -4,11 +4,26 @@ include:
   - nginx.ng
   - .service
 
+{% if salt.grains.get('os_family') == 'RedHat' %}
+add_shibboleth_yum_repo:
+  pkgrepo.managed:
+    - name: security_shibboleth
+    - humanname: Shibboleth (CentOS_7)
+    - type: rpm-md
+    - baseurl: http://download.opensuse.org/repositories/security:/shibboleth/CentOS_7/
+    - gpgcheck: True
+    - gpgkey: http://download.opensuse.org/repositories/security:/shibboleth/CentOS_7/repodata/repomd.xml.key
+    - enabled: True
+    - require_in:
+        - pkg: install_service_provider
+{% endif %}
+
 install_service_provider:
   pkg.installed:
     - pkgs: {{ nginx_shibboleth.pkgs }}
     - require_in:
         - service: nginx_shibboleth_service_running
+        - cmd: nginx_configure
 
 clone_nginx_shibboleth_plugin:
   git.latest:

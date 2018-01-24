@@ -15,7 +15,7 @@ generate_shibboleth_sp_cert_and_key:
 place_shibboleth_sp_{{ secret }}:
   file.managed:
     - name: /etc/shibboleth/sp-{{ secret }}.pem
-    - mode: 0644
+    - mode: 0600
     - user: _shibd
     - group: _shibd
     - contents_pillar: nginx-shibboleth:secrets:{{ secret }}
@@ -36,7 +36,7 @@ generate_{{ config_name }}_configuration_file:
 
 place_supervisor_fcgi_configuration:
   file.managed:
-    - name: /etc/supervisor/conf.d/shibboleth_sp_fcgi.conf
+    - name: {{ nginx_shibboleth.supervisor.config_dir }}/shibboleth_sp_fcgi.conf
     - source: salt://nginx-shibboleth/files/shibboleth_sp_fcgi.conf
 
 {% for program in ['shibauthorizer', 'shibresponder'] %}

@@ -88,6 +88,7 @@ Vagrant.configure(2) do |config|
     salt.minion_config = 'minion.conf'
     salt.bootstrap_options = '-U -Z'
     salt.install_type = 'git'
+    salt.install_args = '2e9f1999f61318fc4fe0ac2a1290268a5f8d9416'
     salt.masterless = true
     salt.run_highstate = true
     salt.colorize = true

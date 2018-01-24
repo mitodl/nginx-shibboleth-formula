@@ -8,5 +8,5 @@ nginx_shibboleth_service_running:
 
 supervisor_service_running:
   service.running:
-    - name: supervisor
+    - name: {{ nginx_shibboleth.supervisor.service }}
     - enable: True

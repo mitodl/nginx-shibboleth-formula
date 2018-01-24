@@ -8,12 +8,29 @@
         'pkgs': [
             'shibboleth-sp2-utils',
             'supervisor'
-        ]
+        ],
+        'supervisor': {
+            'config_dir': '/etc/supervisor/conf.d',
+            'service': 'supervisor'
+        },
+        'shibboleth': {
+            'user': '_shibd',
+            'group': '_shibd'
+        }
     },
     'RedHat': {
         'pkgs': [
             'shibboleth',
-            'supervisor'
-        ]
+            'supervisor',
+            'gcc'
+        ],
+        'supervisor': {
+            'config_dir': '/etc/supervisord.d',
+            'service': 'supervisord'
+        },
+        'shibboleth': {
+            'user': 'shibd',
+            'group': 'root'
+        }
     },
 }, grain='os_family', merge=salt.pillar.get('nginx-shibboleth:overrides'), base='default') %}

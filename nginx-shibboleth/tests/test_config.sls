@@ -10,7 +10,4 @@ test_{{ fname }}_present:
     - group:
         expected: _shibd
         comparison: eq
-    - mode:
-        expected: 420
-        comparison: eq
 {% endfor %}
