@@ -13,9 +13,8 @@ Vagrant.configure(2) do |config|
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://atlas.hashicorp.com/search.
 
-  
   config.vm.define "debian" do |debian|
-    debian.vm.box = "debian/jessie64"
+    debian.vm.box = "debian/stretch64"
   end
 
   config.vm.define "centos" do |centos|
@@ -23,9 +22,8 @@ Vagrant.configure(2) do |config|
   end
 
   config.vm.define "ubuntu" do |ubuntu|
-    ubuntu.vm.box = "ubuntu/trusty64"
+    ubuntu.vm.box = "ubuntu/xenial64"
   end
-  
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
@@ -39,7 +37,7 @@ Vagrant.configure(2) do |config|
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
-  # config.vm.network "private_network", ip: "192.168.33.10"
+  config.vm.network "private_network", ip: "192.168.33.10"
 
   # Create a public network, which generally matched to bridged network.
   # Bridged networks make the machine appear as another physical device on
@@ -51,6 +49,7 @@ Vagrant.configure(2) do |config|
   # the path on the guest to mount the folder. And the optional third
   # argument is a set of non-required options.
   # config.vm.synced_folder "../data", "/vagrant_data"
+  # config.vm.synced_folder "../salt-extensions/extensions/", "/srv/salt/", type: "rsync", rsync__exclude: ".git"
   config.vm.synced_folder ".", "/vagrant", type: "rsync", rsync__exclude: ".git"
 
   # Provider-specific configuration so you can fine-tune various
@@ -83,16 +82,16 @@ Vagrant.configure(2) do |config|
   #   sudo apt-get install -y apache2
   # SHELL
   config.vm.provision "shell", path: "scripts/vagrant_setup.sh"
-  
   config.vm.provision "shell", path: "scripts/gitfs_deps.sh"
-  
+  config.vm.provision "shell", path: "scripts/testinfra.sh"
   config.vm.provision :salt do |salt|
     salt.minion_config = 'minion.conf'
     salt.bootstrap_options = '-U -Z'
+    salt.install_type = 'git'
+    salt.install_args = '2e9f1999f61318fc4fe0ac2a1290268a5f8d9416'
     salt.masterless = true
     salt.run_highstate = true
     salt.colorize = true
     salt.verbose = true
   end
-  
 end
