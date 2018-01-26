@@ -16,12 +16,13 @@ Available states
 .. contents::
     :local:
 
-``nginx-shibboleth``
+``nginx-shibboleth.install``
 --------------------
 
-TODO - add description of this state
+Installs the Shibboleth Service Provider, as well as compiling Nginx with support for interfacing with the service
+provider via the FastCGI protocol.
 
-``nginx-shibboleth.conf``
+``nginx-shibboleth.config``
 -------------------------
 
 This state will place the contents of the shibboleth key and certificate from
