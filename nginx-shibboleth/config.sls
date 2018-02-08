@@ -41,7 +41,7 @@ place_supervisor_fcgi_configuration:
     - source: salt://nginx-shibboleth/templates/shibboleth_sp_fcgi.conf
     - template: jinja
     - context:
-        shib_user: {{ nginx-shibboleth.shibboleth.user }}
+        shib_user: {{ nginx_shibboleth.shibboleth.user }}
 
 {% for program in ['shibauthorizer', 'shibresponder'] %}
 ensure_{{ program }}_fcgi_running:
