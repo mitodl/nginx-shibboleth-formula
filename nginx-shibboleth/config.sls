@@ -30,7 +30,7 @@ generate_{{ config_name }}_configuration_file:
   file.managed:
     - name: /etc/shibboleth/{{ config_name }}.xml
     - contents: |
-        {{ config_data|xml()|indent(8) }}
+        {{ salt.jinjafilters.format_xml(config_data)|indent(8) }}
     - onchanges_in:
         - service: nginx_shibboleth_service_running
 {% endfor %}
