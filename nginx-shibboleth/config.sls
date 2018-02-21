@@ -25,14 +25,15 @@ generate_shibboleth_sp_cert_and_key:
     - creates: /etc/shibboleth/sp-cert.pem
 {% endif %}
 
-{% for config_name, config_data in pillar_config.items() %}
+{% for config_name in pillar_config %}
 generate_{{ config_name }}_configuration_file:
   file.managed:
     - name: /etc/shibboleth/{{ config_name }}.xml
-    - contents: |
-        {{ salt.jinjafilters.format_xml(config_data)|indent(8) }}
-    - onchanges_in:
+    - contents_pillar: nginx-shibboleth:config:{{ config_name }}
+    - watch_in:
         - service: nginx_shibboleth_service_running
+        - supervisord: ensure_shibauthorizer_fcgi_running
+        - supervisord: ensure_shibresponder_fcgi_running
 {% endfor %}
 
 place_supervisor_fcgi_configuration:
