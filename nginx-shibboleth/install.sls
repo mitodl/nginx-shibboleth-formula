@@ -1,7 +1,7 @@
 {% from "nginx-shibboleth/map.jinja" import nginx_shibboleth with context %}
 
 include:
-  - nginx.ng
+  - nginx
   - .service
 
 {% if salt.grains.get('os_family') == 'RedHat' %}
